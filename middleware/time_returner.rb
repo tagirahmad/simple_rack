@@ -1,5 +1,6 @@
 require 'byebug'
 require_relative '../constants'
+require_relative '../services/time_formatter'
 
 class TimeReturner
   include Constants
@@ -15,55 +16,24 @@ class TimeReturner
     if wrong_url?(request.path, request_format_params)
       rack_response(
         "#{HTTP_STATUS_CODES.key(404).to_s}\n",
-        HTTP_STATUS_CODES[:NOT_FOUND],
-        HEADERS
+        HTTP_STATUS_CODES[:NOT_FOUND]
       )
     else
-      parsed_time_formats = parse_time_formats(request_format_params)
+      tf = TimeFormatter.new(request_format_params)
+      tf.perform
 
-      requested_time_element_formats = []
-      wrong_formats = []
-
-      parsed_time_formats.each do |element|
-        if TIME_FORMATS.key?(element)
-          requested_time_element_formats << TIME_FORMATS[element]
-        else
-          wrong_formats << element
-        end
-      end
-
-      unless wrong_formats.empty?
-        rack_response(
-          [unknown_time_formats(wrong_formats)],
-          HTTP_STATUS_CODES[:BAD_REQUEST], 
-          HEADERS
-        )
+      unless tf.wrong_formats.empty?
+        rack_response(tf.unknown_time_formats, HTTP_STATUS_CODES[:BAD_REQUEST])
       else
-        rack_response(
-          requested_time(requested_time_element_formats),
-          HTTP_STATUS_CODES[:OK], 
-          HEADERS
-        )
+        rack_response(tf.requested_time, HTTP_STATUS_CODES[:OK])
       end      
     end
   end
 
   private
-
-  def parse_time_formats(formats)
-    formats.split(',')
-  end
-
-  def unknown_time_formats(wrong_formats)
-    "Unknown time formats: #{wrong_formats.to_s.gsub!(/"/, '')}\n"
-  end
-
-  def requested_time(element_formats)
-    Time.now.strftime(element_formats.join('-'))
-  end
-
-  def rack_response(body, status_code, headers)
-    response = Rack::Response.new(body, status_code, headers)
+  
+  def rack_response(body, status_code)
+    response = Rack::Response.new(body, status_code, HEADERS)
     response.finish
   end
 
