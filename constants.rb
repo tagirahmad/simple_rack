@@ -8,9 +8,4 @@ module Constants
   }
 
   TIME_URL = '/time'.freeze
-  
-  TIME_FORMATS = {
-    'year' => '%Y', 'month' => '%m', 'day' => '%d',
-    'hour' => '%H', 'minute' => '%M', 'second' => '%S'
-  }.freeze
 end

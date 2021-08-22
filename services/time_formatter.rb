@@ -1,9 +1,10 @@
-require_relative '../constants'
-
 class TimeFormatter
-  include Constants
-
   attr_reader :wrong_formats
+
+  TIME_FORMATS = {
+    'year' => '%Y', 'month' => '%m', 'day' => '%d',
+    'hour' => '%H', 'minute' => '%M', 'second' => '%S'
+  }.freeze
 
   def initialize(time_string_params)
     @time_string_params = time_string_params
